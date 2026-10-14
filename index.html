@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Samik Asthana</title>
+  <meta name="description" content="Samik Asthana: data scientist working on geospatial and Earth observation data pipelines.">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="name" href="./">Samik Asthana</a>
+      <nav>
+        <a href="#work">Work</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Data scientist · Geospatial &amp; Earth observation</div>
+      <h1>I build data pipelines that move satellite archives to the cloud, and I measure what makes them faster.</h1>
+      <p class="lede">
+        Computer Science &amp; AI student. In 2026 I worked as a data scientist at Blu-H, a climate
+        non-profit, moving a VIIRS satellite flood archive into a cloud catalog on Microsoft Azure.
+      </p>
+      <div class="links">
+        <a class="btn primary" href="projects/viirs.html">Read the VIIRS case study</a>
+        <a class="btn" href="https://github.com/sa3301">GitHub</a>
+      </div>
+    </section>
+
+    <section id="work">
+      <h2>Selected work</h2>
+
+      <a class="project" href="projects/viirs.html">
+        <img src="assets/viirs-flood-explorer.jpg" width="1600" height="1112"
+             alt="VIIRS-ABI blended flood map rendered over the US Northeast in the Planetary Computer Pro Explorer">
+        <div class="body">
+          <div class="eyebrow">Blu-H · 2026</div>
+          <h3>Moving a satellite flood archive to the cloud</h3>
+          <p class="muted">
+            Bulk ingestion pipeline that cloud-optimises VIIRS flood granules and catalogues them in
+            Microsoft Planetary Computer Pro. I diagnosed throughput and data-loss problems from production
+            logs, then fixed them.
+          </p>
+          <div class="stats">
+            <div class="stat"><b>~4×</b><span>projected backfill speed-up from batching catalog runs</span></div>
+            <div class="stat"><b>+15%</b><span>measured throughput from driver fixes</span></div>
+            <div class="stat"><b>0</b><span>good files put at risk by one bad file in a batch</span></div>
+          </div>
+          <ul class="tags">
+            <li>Python</li><li>Azure</li><li>Terraform</li><li>STAC</li><li>Cloud-Optimised GeoTIFF</li>
+          </ul>
+          <span class="more">Read the case study →</span>
+        </div>
+      </a>
+    </section>
+
+    <section id="about">
+      <h2>About</h2>
+      <p>
+        I study Computer Science and Artificial Intelligence at the University of Bath. My work sits where data science meets
+        engineering: understanding a dataset properly, then building the pipeline that serves it reliably.
+      </p>
+      <p>
+        I also hold CompTIA Security+ and the Google Cybersecurity Professional certificate. That shows up
+        in how I build infrastructure: least privilege, no secrets in code, and removing access that
+        nothing uses.
+      </p>
+    </section>
+
+    <section id="contact">
+      <h2>Contact</h2>
+      <p>
+        The best way to reach me is through <a href="https://github.com/sa3301">GitHub</a>.
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">© 2026 Samik Asthana</div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VIIRS Archive Migration · Samik Asthana</title>
+  <meta name="description" content="Case study: a bulk ingestion pipeline moving a VIIRS satellite flood archive into a cloud STAC catalog.">
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap">
+      <a class="name" href="../">Samik Asthana</a>
+      <nav>
+        <a href="../#work">Work</a>
+        <a href="../#about">About</a>
+        <a href="../#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap case">
+    <div class="eyebrow">Case study · Blu-H · 2026</div>
+    <h1>Moving a satellite flood archive to the cloud</h1>
+    <p class="lede">
+      Blu-H, a climate non-profit, holds a continuous record of VIIRS satellite flood maps that covers
+      years missing from NOAA's public archive. I worked on the pipeline that moves it from an on-prem
+      drive into a searchable, map-ready cloud catalog.
+    </p>
+
+    <dl class="meta">
+      <div><dt>Role</dt><dd>Data scientist on a small engineering team</dd></div>
+      <div><dt>Stack</dt><dd>Python, Azure, Terraform, STAC, Cloud-Optimised GeoTIFF</dd></div>
+      <div><dt>Public site</dt><dd><a href="https://viirs.blu-h.org">viirs.blu-h.org</a></dd></div>
+    </dl>
+
+    <figure>
+      <img src="../assets/viirs-flood-explorer.jpg" width="1600" height="1112"
+           alt="VIIRS-ABI blended flood map rendered over the US Northeast in the Planetary Computer Pro Explorer">
+      <figcaption>A VIIRS flood map served from the catalog and rendered on demand. Source data: NOAA / NASA / CIMSS (public domain).</figcaption>
+    </figure>
+
+    <h2>The problem</h2>
+    <p>
+      VIIRS is an imaging instrument on NOAA/NASA polar-orbiting satellites. Its flood products show where
+      water is, every day, worldwide. Blu-H's copy of that record existed only as files on a drive:
+      researchers couldn't search it, map tools couldn't display it, and the drive was a single point of
+      failure.
+    </p>
+    <p>
+      The goal was a STAC catalog (the open standard for searchable geospatial data) on Microsoft
+      Planetary Computer Pro, with every file converted to a Cloud-Optimised GeoTIFF that can be tiled
+      straight onto a map. That meant a backfill of hundreds of thousands of files, run as parallel batch
+      jobs in the cloud.
+    </p>
+
+    <h2>What I did</h2>
+
+    <h3>1. Checked the data before building on assumptions</h3>
+    <p>
+      The pipeline had been designed around one file format, because the early samples used it. I surveyed
+      the actual archive and found it was stored in different formats entirely. That finding moved ingest
+      onto a GeoTIFF-to-COG path and later justified retiring the original pipeline (step 5).
+    </p>
+
+    <h3>2. Built the bulk-ingest infrastructure</h3>
+    <p>
+      I wrote the Terraform for a queue-driven batch job and the wrapper that splits the archive into
+      shards, so the backfill runs in parallel without anyone babysitting it.
+    </p>
+
+    <h3>3. Diagnosed throughput and data-loss problems from production logs</h3>
+    <p>
+      Once the backfill was running, I queried its logs and the catalog's API rather than guessing. Four
+      problems stood out:
+    </p>
+    <ul>
+      <li><strong>Progress was saved but never read back,</strong> so every restarted shard began from
+        zero and redid finished work.</li>
+      <li><strong>A catalog lookup almost never matched,</strong> because it only looked at the first page
+        of results.</li>
+      <li><strong>One unreadable file failed a whole shard,</strong> sending hundreds of good files back
+        for retry.</li>
+      <li><strong>The status poller was slower than the job it was waiting for,</strong> adding dead time
+        to every file.</li>
+    </ul>
+    <p>
+      The fixes: resume from saved progress, read results directly instead of searching for them, set
+      unreadable files aside in their own state instead of failing the shard, and tighten polling.
+      Throughput went up about 15%, and good files are no longer at risk of being dropped.
+    </p>
+
+    <h3>4. Batched catalog runs: about 4× faster (projected)</h3>
+    <p>
+      Measurements showed each catalog run was almost all fixed overhead, and every run carried a single
+      file. I split ingestion into a per-file staging step and a shared finalise step, so one run carries
+      a batch.
+    </p>
+    <div class="callout">
+      <p>
+        <strong>Choosing the batch size:</strong> a run that misses its deadline fails the whole shard. I
+        picked the batch size from the worst-case run time, not the best-case speed. It keeps a wide safety
+        margin and still captures most of the saving. Any file that isn't confirmed in the catalog retries
+        on the old one-at-a-time path, so batching can't wrongly mark a file as done.
+      </p>
+    </div>
+
+    <h3>5. Deleted what nothing used</h3>
+    <p>
+      The original pipeline from step 1 had no production use, but it still had infrastructure, alerts
+      and permissions attached. I wrote the architecture decision record to retire it and removed several
+      thousand lines of code, infrastructure and docs. The one health check that depended on it stayed.
+    </p>
+
+    <h3>Also</h3>
+    <ul>
+      <li>Fixed a quadratic slowdown in how progress was saved.</li>
+      <li>Removed write contention in the catalog with a read-before-write check.</li>
+      <li>Built the self-service data-request form on the public site.</li>
+    </ul>
+
+    <h2>What I took from it</h2>
+    <p>
+      Measure before tuning: every fix above started from a number in the logs. Pick settings from the
+      worst case they must survive. And sometimes the most valuable change is a deletion.
+    </p>
+
+    <p class="muted" style="margin-top:2.5rem">
+      The source code is private to Blu-H. I'm happy to walk through the design in an interview.
+    </p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap"><a href="../">← Back to all work</a></div>
+  </footer>
+</body>
+</html>
